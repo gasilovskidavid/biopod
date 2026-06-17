@@ -1,0 +1,56 @@
+#─ Secrets & credentials ─
+.env
+.env.*
+*.env
+.aws/
+credentials
+
+#─ Terraform ─
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform.lock.hcl
+terraform.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+#─ Python ─
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+#─ Lambda deployment artefacts ─
+*.zip
+lambda.zip
+deployment-package.zip
+
+#─ Docker ─
+.dockerignore
+docker-compose.override.yml
+
+#─ Grafana local data ─
+grafana-data/
+grafana-storage/
+
+#─ OS / editor noise ─
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+#─ GitHub Actions local runner cache ─
+.act/
