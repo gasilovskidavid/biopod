@@ -1,2 +1,3 @@
 boto3==1.43.32
 python-dotenv==1.2.2
+ruff==0.15.17
