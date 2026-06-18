@@ -8,7 +8,7 @@ load_dotenv()
 STREAM_NAME = os.environ.get('STREAM_NAME')
 AWS_REGION = os.environ.get('AWS_REGION')
 
-client = boto3.client('Kinesis', region = AWS_REGION)
+client = boto3.client('kinesis', region_name=AWS_REGION)
 
 record = {
     "pod_id" : "alpha",
