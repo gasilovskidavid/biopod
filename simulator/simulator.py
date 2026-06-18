@@ -15,6 +15,7 @@ AWS_REGION = os.environ.get("AWS_REGION")
 
 client = boto3.client("kinesis", region_name=AWS_REGION)
 
+
 @dataclass
 class SensorReading:
     pod_id: str
@@ -25,18 +26,18 @@ class SensorReading:
     water_ph: float
     timestamp: str
 
+
 t = 0
 
-while True :
-
+while True:
     reading = SensorReading(
-    pod_id = "alpha",
-    co2_ppm = 800 + 200 * math.sin(t) + random.gauss(0,10),
-    temperature_c = 24 + 3 * math.sin(t) + random.gauss(0,0.2),
-    light_ppfd = 400 + 400 * math.sin(t) + random.gauss(0,5),
-    rh_pct = 70 + 10 * math.sin(t) + random.gauss(0,1),
-    water_ph = 6.5 + 0.5 *  math.sin(t) + random.gauss(0,0.05),
-    timestamp = time.asctime()
+        pod_id="alpha",
+        co2_ppm=800 + 200 * math.sin(t) + random.gauss(0, 10),
+        temperature_c=24 + 3 * math.sin(t) + random.gauss(0, 0.2),
+        light_ppfd=400 + 400 * math.sin(t) + random.gauss(0, 5),
+        rh_pct=70 + 10 * math.sin(t) + random.gauss(0, 1),
+        water_ph=6.5 + 0.5 * math.sin(t) + random.gauss(0, 0.05),
+        timestamp=time.asctime(),
     )
 
     response = client.put_record(
@@ -45,7 +46,7 @@ while True :
         PartitionKey=reading.pod_id,
     )
 
-    t+=1
+    t += 1
 
     time.sleep(5)
 
@@ -55,4 +56,4 @@ while True :
         f"ppfd={reading.light_ppfd:.1f}, "
         f"relative_humidity={reading.rh_pct:.1f}, "
         f"water_ph={reading.water_ph:.1f}"
-        )
+    )
