@@ -1,7 +1,14 @@
 import json 
 import boto3
+import os
+from dotenv import load_dotenv
 
-client = boto3.client('Kinesis', region = 'eu-west-3')
+load_dotenv()
+
+STREAM_NAME = os.environ.get('STREAM_NAME')
+AWS_REGION = os.environ.get('AWS_REGION')
+
+client = boto3.client('Kinesis', region = AWS_REGION)
 
 record = {
     "pod_id" : "alpha",
@@ -11,7 +18,7 @@ record = {
 
 
 response = client.put_record(
-    StreamName = "biopod-telemetry",
+    StreamName = STREAM_NAME,
     Data = json.dumps(record).encode('utf-8'),
     PartitionKey = "alpha"
 )
