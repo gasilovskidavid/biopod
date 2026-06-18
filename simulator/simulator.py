@@ -4,7 +4,6 @@ import os
 import random
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime
 
 import boto3
 from dotenv import load_dotenv
