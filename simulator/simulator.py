@@ -20,7 +20,7 @@ class SensorReading:
     pod_id: str
     co2_ppm: float
     temperature_c: float
-    light_ppf: float
+    light_ppfd: float
     rh_pct: float
     water_ph: float
     timestamp: str
