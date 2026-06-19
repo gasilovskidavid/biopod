@@ -4,6 +4,7 @@ import os
 import random
 import time
 from dataclasses import asdict, dataclass
+import asyncio
 
 import boto3
 from dotenv import load_dotenv
