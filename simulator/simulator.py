@@ -20,6 +20,7 @@ client = boto3.client("kinesis", region_name=AWS_REGION)
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class SensorReading:
     pod_id: str
@@ -30,7 +31,9 @@ class SensorReading:
     water_ph: float
     timestamp: str
 
+
 PODS = ["alpha", "beta", "gamma"]
+
 
 def generate_reading(pod_id: str, t: float) -> SensorReading:
     return SensorReading(
@@ -43,7 +46,9 @@ def generate_reading(pod_id: str, t: float) -> SensorReading:
         timestamp=time.asctime(),
     )
 
-t=0
+
+t = 0
+
 
 async def run_pod(pod_id: str, phase_offset: float = 0.0, start_delay: float = 0.0):
     await asyncio.sleep(start_delay)
@@ -60,15 +65,16 @@ async def run_pod(pod_id: str, phase_offset: float = 0.0, start_delay: float = 0
         except ClientError as e:
             logging.warning(f"{pod_id}: put_record failed - {e}")
         print(
-        f"Sent: pod id = {reading.pod_id}, co2={reading.co2_ppm:.1f}, "
-        f"temperature_c={reading.temperature_c:.1f}, "
-        f"ppfd={reading.light_ppfd:.1f}, "
-        f"relative_humidity={reading.rh_pct:.1f}, "
-        f"water_ph={reading.water_ph:.1f}"
+            f"Sent: pod id = {reading.pod_id}, co2={reading.co2_ppm:.1f}, "
+            f"temperature_c={reading.temperature_c:.1f}, "
+            f"ppfd={reading.light_ppfd:.1f}, "
+            f"relative_humidity={reading.rh_pct:.1f}, "
+            f"water_ph={reading.water_ph:.1f}"
         )
         t += 1
         jitter = random.uniform(-0.5, 0.5)
         await asyncio.sleep(5 + jitter)
+
 
 async def main():
     offsets = {
@@ -77,5 +83,6 @@ async def main():
         "gamma": {"phase_offset": 4.0, "start_delay": 3.3},
     }
     await asyncio.gather(*(run_pod(pod_id, **cfg) for pod_id, cfg in offsets.items()))
+
 
 asyncio.run(main())
