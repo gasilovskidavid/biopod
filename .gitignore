@@ -10,7 +10,6 @@ credentials
 *.tfstate
 *.tfstate.*
 *.tfstate.backup
-.terraform.lock.hcl
 terraform.tfvars
 override.tf
 override.tf.json
