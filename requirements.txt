@@ -2,3 +2,4 @@ boto3==1.43.32
 python-dotenv==1.2.2
 ruff==0.15.17
 asyncio==4.0.0
+terraform==5.100.0

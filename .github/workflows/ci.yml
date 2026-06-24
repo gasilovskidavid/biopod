@@ -30,12 +30,14 @@ terraform:
     defaults: 
       run:
         working-directory: infrastructure
-        
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "5.100.0"
 
       - name: Terraform format check
         run: terraform fmt -check -recursive
