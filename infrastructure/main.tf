@@ -12,8 +12,8 @@ provider "aws" {
 }
 
 resource "aws_kinesis_stream" "biopod-telemetry" {
-  name  = "biopod-telemetry"
-  shard_count = 1
+  name             = "biopod-telemetry"
+  shard_count      = 1
   retention_period = 24
 
   tags = {
