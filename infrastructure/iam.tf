@@ -48,7 +48,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role_policy" "biopod_consumer_policy" {
   name   = "biopod-consumer-policy"
-  role   = aws_iam_role.biopod-consumer-role.id
+  role   = aws_iam_role.biopod_consumer_role.id
   policy = data.aws_iam_policy_document.biopod_consumer_policy.json
 }
 
