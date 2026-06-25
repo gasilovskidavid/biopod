@@ -11,12 +11,12 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-resource "aws_iam_role" "biopod-consumer-role" {
+resource "aws_iam_role" "biopod_consumer_role" {
   name               = "biopod-consumer-role-wd3uv7xv"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
-data "aws_iam_policy_document" "biopod-consumer-policy" {
+data "aws_iam_policy_document" "biopod_consumer_policy" {
   statement {
     sid    = "KinesisReadStreamMinPolicy"
     effect = "Allow"
@@ -46,9 +46,9 @@ data "aws_iam_policy_document" "biopod-consumer-policy" {
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_iam_role_policy" "biopod-consumer-policy" {
+resource "aws_iam_role_policy" "biopod_consumer_policy" {
   name   = "biopod-consumer-policy"
   role   = aws_iam_role.biopod-consumer-role.id
-  policy = data.aws_iam_policy_document.biopod-consumer-policy.json
+  policy = data.aws_iam_policy_document.biopod_consumer_policy.json
 }
 
