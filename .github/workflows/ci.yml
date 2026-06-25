@@ -25,15 +25,25 @@ jobs:
       - name: Ruff format check 
         run: ruff format --check .
 
-# terraform:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - uses: hashicorp/setup-terraform@v3
-#
-#      - name: Terraform validate
-#        run: |
-#          cd infrastructure
-#          terraform init -backend=false
-#          terraform validate
+  terraform:
+      runs-on: ubuntu-latest
+      defaults: 
+        run:
+          working-directory: infrastructure
+
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+          with:
+            terraform_version: "1.15.6"
+
+        - name: Terraform format check
+          run: terraform fmt -check -recursive
+
+        - name: Terraform init
+          run: terraform init -backend=false
+
+        - name: Terraform validate
+          run: terraform validate
