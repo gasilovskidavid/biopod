@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
       "kinesis:ListShards"
     ]
 
-    resources = [aws_kinesis_stream.biopod-telemetry.arn]
+    resources = [aws_kinesis_stream.biopod_telemetry.arn]
   }
 
   statement {
