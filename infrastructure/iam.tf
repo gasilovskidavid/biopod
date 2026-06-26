@@ -47,7 +47,8 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
     sid    = "MinWriteToDDB"
     effect = "Allow"
     actions = [
-      "dynamodb:PutItem"
+      "dynamodb:PutItem",
+      "dynamodb:Query"
     ]
 
     resources = [aws_dynamodb_table.biopod_telemetry_db.arn]

@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 
 AWS_REGION = os.environ.get("AWS_REGION")
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
-CO2_ALERT_THRESHOLD = os.environ.get("CO2_ALERT_THRESHOLD")
+CO2_ALERT_THRESHOLD = float(os.environ.get("CO2_ALERT_THRESHOLD"))
 SNS_TOPIC = os.environ.get("SNS_TOPIC")
 
 dynamodb_client = boto3.client("dynamodb", region_name=AWS_REGION)
