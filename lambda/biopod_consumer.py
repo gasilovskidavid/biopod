@@ -78,7 +78,7 @@ def lambda_handler(event, _context):
                     ),
                 )
                 logger.info(f"Alert published for {pod_id}: {co2_ppm:.1f} ppm")
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError, KeyError) as e:
             logger.warning(
                 f"Skipped faulty record(seq={record['kinesis']['sequenceNumber']}): {e}"
             )
