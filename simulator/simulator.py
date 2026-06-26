@@ -47,9 +47,6 @@ def generate_reading(pod_id: str, t: float) -> SensorReading:
     )
 
 
-t = 0
-
-
 async def run_pod(pod_id: str, phase_offset: float = 0.0, start_delay: float = 0.0):
     await asyncio.sleep(start_delay)
     t = phase_offset
@@ -63,7 +60,7 @@ async def run_pod(pod_id: str, phase_offset: float = 0.0, start_delay: float = 0
             )
             logger.info(f"{pod_id} sent at {time.time():.2f}")
         except ClientError as e:
-            logging.warning(f"{pod_id}: put_record failed - {e}")
+            logger.warning(f"{pod_id}: put_record failed - {e}")
         print(
             f"Sent: pod id = {reading.pod_id}, co2={reading.co2_ppm:.1f}, "
             f"temperature_c={reading.temperature_c:.1f}, "

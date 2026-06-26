@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 
 AWS_REGION = os.environ.get("AWS_REGION")
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
-CO2_ALERT_THRESHOLD = float(os.environ.get("CO2_ALERT_THRESHOLD"))
+CO2_ALERT_THRESHOLD = float(os.environ.get("CO2_ALERT_THRESHOLD", 1200))
 SNS_TOPIC = os.environ.get("SNS_TOPIC")
 
 dynamodb_client = boto3.client("dynamodb", region_name=AWS_REGION)
@@ -78,7 +78,7 @@ def lambda_handler(event, _context):
                     ),
                 )
                 logger.info(f"Alert published for {pod_id}: {co2_ppm:.1f} ppm")
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError, KeyError) as e:
             logger.warning(
                 f"Skipped faulty record(seq={record['kinesis']['sequenceNumber']}): {e}"
             )
