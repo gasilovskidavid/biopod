@@ -52,6 +52,16 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
 
     resources = [aws_dynamodb_table.biopod_telemetry_db.arn]
   }
+
+  statement {
+    sid = "SNSAlerting"
+    effect = "Allow"
+    actions = [
+      "sns:Publish"
+    ]
+
+    resources = [aws_sns_topic.co2_alerts.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "biopod_consumer_policy" {
