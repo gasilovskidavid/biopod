@@ -54,7 +54,7 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
   }
 
   statement {
-    sid = "SNSAlerting"
+    sid    = "SNSAlerting"
     effect = "Allow"
     actions = [
       "sns:Publish"
