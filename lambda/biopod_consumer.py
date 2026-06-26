@@ -17,6 +17,7 @@ sns_client = boto3.client("sns", region_name=AWS_REGION)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+
 def threshold_passed_before_check(pod_id) -> bool:
     try:
         response = dynamodb_client.query(
@@ -32,8 +33,9 @@ def threshold_passed_before_check(pod_id) -> bool:
         previous_co2_level = float(items[0]["co2_ppm"]["N"])
         return previous_co2_level > CO2_ALERT_THRESHOLD
     except (ClientError, KeyError, ValueError) as e:
-        logger.warning(f"Couldn't get previous alert state for {pod_id}, "
-                       f"alerting anyway: {e}")
+        logger.warning(
+            f"Couldn't get previous alert state for {pod_id}, alerting anyway: {e}"
+        )
         return False
 
 
@@ -73,7 +75,7 @@ def lambda_handler(event, _context):
                         f"Biopod {pod_id} CO2 level at {co2_ppm:.1f} ppm "
                         f"(threshold: {CO2_ALERT_THRESHOLD} ppm passed) "
                         f"at {reading['timestamp']}."
-                    )
+                    ),
                 )
                 logger.info(f"Alert published for {pod_id}: {co2_ppm:.1f} ppm")
         except (ValueError, TypeError) as e:

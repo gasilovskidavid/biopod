@@ -19,7 +19,7 @@ resource "aws_lambda_function" "biopod_consumer" {
     variables = {
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.biopod_telemetry_db.name
       CO2_ALERT_THRESHOLD = 1200
-      SNS_TOPIC = aws_sns_topic.co2_alerts.arn
+      SNS_TOPIC           = aws_sns_topic.co2_alerts.arn
     }
   }
 }
