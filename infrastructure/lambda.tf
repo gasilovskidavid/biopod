@@ -14,6 +14,12 @@ resource "aws_lambda_function" "biopod_consumer" {
 
   timeout     = 3
   memory_size = 128
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.biopod_telemetry_db.name
+    }
+  }
 }
 
 resource "aws_lambda_event_source_mapping" "biopod_consumer_trigger" {

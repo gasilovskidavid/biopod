@@ -42,6 +42,16 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
 
     resources = ["arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/biopod-consumer:*"]
   }
+
+  statement {
+    sid    = "MinWriteToDDB"
+    effect = "Allow"
+    actions = [
+      "dynamodb:PutItem"
+    ]
+
+    resources = [aws_dynamodb_table.biopod_telemetry_db.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "biopod_consumer_policy" {
