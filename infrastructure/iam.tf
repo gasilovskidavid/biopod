@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
   }
 
   statement {
-    sid = "MinWriteToDDB"
+    sid    = "MinWriteToDDB"
     effect = "Allow"
     actions = [
       "dynamodb:PutItem"
