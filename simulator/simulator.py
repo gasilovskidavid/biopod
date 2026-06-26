@@ -43,7 +43,7 @@ def generate_reading(pod_id: str, t: float) -> SensorReading:
         light_ppfd=400 + 400 * math.sin(t) + random.gauss(0, 5),
         rh_pct=70 + 10 * math.sin(t) + random.gauss(0, 1),
         water_ph=6.5 + 0.5 * math.sin(t) + random.gauss(0, 0.05),
-        timestamp=time.asctime(),
+        timestamp=time.gmtime(),
     )
 
 
