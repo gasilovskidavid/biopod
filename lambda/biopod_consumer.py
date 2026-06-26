@@ -1,8 +1,9 @@
 import base64
 import json
 import logging
-import boto3
 import os
+
+import boto3
 from botocore.exceptions import ClientError
 
 AWS_REGION = os.environ.get("AWS_REGION")
