@@ -43,6 +43,7 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
     resources = ["arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/biopod-consumer:*"]
   }
 
+<<<<<<< feat/create_and_populate_db
   statement {
     sid    = "MinWriteToDDB"
     effect = "Allow"
@@ -54,6 +55,8 @@ data "aws_iam_policy_document" "biopod_consumer_policy" {
   }
 }
 
+=======
+>>>>>>> main
 resource "aws_iam_role_policy" "biopod_consumer_policy" {
   name   = "biopod-consumer-policy"
   role   = aws_iam_role.biopod_consumer_role.id
