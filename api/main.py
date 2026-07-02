@@ -1,19 +1,23 @@
 import os
 
 import boto3
-from boto3.dynamodb.types import TypeDeserializer
+from boto3.dynamodb.conditions import Key
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+load_dotenv()
 
 AWS_REGION = os.environ.get("AWS_REGION")
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
 
-dynamodb_client = boto3.client("dynamodb", region_name=AWS_REGION)
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+table = dynamodb.Table(DYNAMODB_TABLE_NAME)
 
 app = FastAPI()
 
 
-class Item(BaseModel):
+class Reading(BaseModel):
     pod_id: str
     timestamp: str
     co2_ppm: float
@@ -23,30 +27,23 @@ class Item(BaseModel):
     light_ppfd: float
 
 
-@app.get("/items/{pod_id}/{start_time}/{end_time}", response_model=list[Item])
-def querydb(pod_id: str, start_time: int, end_time: int) -> list[Item]:
-    response = dynamodb_client.query(
-        TableName=DYNAMODB_TABLE_NAME,
-        KeyConditionExpression="pod_id = :pid AND #ts BETWEEN :start AND :end",
-        ExpressionAttributeNames={"#ts": "timestamp"},
-        ExpressionAttributeValues={
-            ":pid": {"S": pod_id},
-            ":start": {"N": str(start_time)},
-            ":end": {"N": str(end_time)},
-        },
-    )
-    if not response["Items"]:
+@app.get("/readings")
+def query_readings(
+    pod_id: str, start_time: str | None = None, end_time: str | None = None
+) -> list[Reading]:
+    pod_query_key = Key("pod_id").eq(pod_id)
+    if start_time and end_time:
+        pod_query_key &= Key("timestamp").between(start_time, end_time)
+    elif start_time:
+        pod_query_key &= Key("timestamp").gte(start_time)
+    elif end_time:
+        pod_query_key &= Key("timestamp").lte(end_time)
+
+    response = table.query(KeyConditionExpression=pod_query_key)
+    readings = response.get("Items", [])
+    if not readings:
         raise HTTPException(
             status_code=404,
-            detail=f"No items found for pod {pod_id}for selected timerange",
+            detail=f"No readings found for pod {pod_id} for selected timerange",
         )
-    deserializer = TypeDeserializer()
-    return [
-        {
-            k: str(deserializer.deserialize(v))
-            if k == "timestamp"
-            else deserializer.deserialize(v)
-            for k, v in item.items()
-        }
-        for item in response["Items"]
-    ]
+    return [Reading(**item) for item in readings]
