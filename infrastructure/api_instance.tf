@@ -98,7 +98,7 @@ resource "aws_security_group" "api_server" {
 # EC2 instance that boots already running api/main.py via uvicorn
 # ---------------------------------------------------------------------------
 resource "aws_instance" "api_server" {
-  ami = data.aws_ami.api_server.id
+  ami           = data.aws_ami.api_server.id
   instance_type = "t3.micro"
 
   # TODO_CONFIGURE: optional SSH key pair name for shell access (SSM works without one)
