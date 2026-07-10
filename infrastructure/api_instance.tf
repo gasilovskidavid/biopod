@@ -23,51 +23,6 @@ data "aws_ami" "api_server" {
 }
 
 # ---------------------------------------------------------------------------
-# IAM: let the instance Query the telemetry table (matches api/main.py usage)
-# ---------------------------------------------------------------------------
-data "aws_iam_policy_document" "api_server_assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "api_server" {
-  name               = "biopod-api-server-role"
-  assume_role_policy = data.aws_iam_policy_document.api_server_assume_role.json
-}
-
-data "aws_iam_policy_document" "api_server" {
-  statement {
-    sid    = "ReadTelemetryTable"
-    effect = "Allow"
-    actions = [
-      "dynamodb:Query",
-      "dynamodb:DescribeTable"
-    ]
-
-    resources = [aws_dynamodb_table.biopod_telemetry_db.arn]
-  }
-}
-
-resource "aws_iam_role_policy" "api_server" {
-  name   = "biopod-api-server-policy"
-  role   = aws_iam_role.api_server.id
-  policy = data.aws_iam_policy_document.api_server.json
-}
-
-resource "aws_iam_instance_profile" "api_server" {
-  name = "biopod-api-server-profile"
-  role = aws_iam_role.api_server.name
-}
-
-# ---------------------------------------------------------------------------
 # Security group for the FastAPI read layer
 # ---------------------------------------------------------------------------
 resource "aws_security_group" "api_server" {
