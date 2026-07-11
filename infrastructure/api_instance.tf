@@ -32,19 +32,19 @@ resource "aws_instance" "api_server" {
   ami           = data.aws_ami.al2023_arm64.id
   instance_type = "t4g.micro" # arm64, to match the AMI architecture
 
+  key_name               = aws_key_pair.admin.key_name
   iam_instance_profile   = aws_iam_instance_profile.api_server.name
   vpc_security_group_ids = [aws_security_group.api_server.id]
   subnet_id              = data.aws_subnets.default.ids[0]
 
-  # The API code is baked into user_data, so a code change is a redeploy:
-  # edit api/main.py -> terraform apply -> instance is replaced.
+
   user_data_replace_on_change = true
 
   user_data = <<-EOF
     #!/bin/bash
     set -euxo pipefail
 
-    dnf install -y python3 python3-pip
+    dnf install -y python3.11 python3.11-pip
 
     mkdir -p /opt/api
 
@@ -58,7 +58,10 @@ resource "aws_instance" "api_server" {
 
     # A venv keeps the uvicorn path deterministic instead of depending on
     # where a root-level `pip3 install` happens to drop console scripts.
-    python3 -m venv /opt/api/venv
+    # Built with python3.11 explicitly, not bare `python3`: the latter is the
+    # AMI's default interpreter, which is not guaranteed to be the 3.11 that
+    # Lambda and CI run on.
+    python3.11 -m venv /opt/api/venv
     /opt/api/venv/bin/pip install --upgrade pip
     /opt/api/venv/bin/pip install -r /opt/api/requirements.txt
 
