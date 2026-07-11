@@ -1,43 +1,22 @@
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc_id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
-data "aws_ami" "api_server" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "architecture"
-    values = ["arm64"]
-  }
-  filter {
-    name   = "name"
-    values = ["al2023-ami-2023*"]
-  }
-}
-
-# ---------------------------------------------------------------------------
-# Security group for the FastAPI read layer
-# ---------------------------------------------------------------------------
 resource "aws_security_group" "api_server" {
   name        = "api-server-sg"
   description = "Security group for FastAPI read layer"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "FastAPI read layer"
+    description = "SSH from admin"
     protocol    = "tcp"
-    # TODO_CONFIGURE: API port (must match the --port in the systemd unit below; uvicorn default is 8000)
-    # from_port = 8000
-    # to_port   = 8000
-    # TODO_CONFIGURE: who may reach the API, e.g. ["0.0.0.0/0"] for public or your office CIDR
-    # cidr_blocks = ["x.x.x.x/32"]
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = [var.my_ip]
+  }
+
+  ingress {
+    description     = "FastAPI from the Grafana instance only"
+    protocol        = "tcp"
+    from_port       = 8000
+    to_port         = 8000
+    security_groups = [aws_security_group.grafana_server.id]
   }
 
   egress {
@@ -49,29 +28,18 @@ resource "aws_security_group" "api_server" {
   }
 }
 
-# ---------------------------------------------------------------------------
-# EC2 instance that boots already running api/main.py via uvicorn
-# ---------------------------------------------------------------------------
 resource "aws_instance" "api_server" {
-  ami           = data.aws_ami.api_server.id
-  instance_type = "t3.micro"
-
-  # TODO_CONFIGURE: optional SSH key pair name for shell access (SSM works without one)
-  # key_name = "my-key-pair"
+  ami           = data.aws_ami.al2023_arm64.id
+  instance_type = "t4g.micro" # arm64, to match the AMI architecture
 
   iam_instance_profile   = aws_iam_instance_profile.api_server.name
   vpc_security_group_ids = [aws_security_group.api_server.id]
   subnet_id              = data.aws_subnets.default.ids[0]
 
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      # max price left unset for now, set after test
-    }
-  }
+  # The API code is baked into user_data, so a code change is a redeploy:
+  # edit api/main.py -> terraform apply -> instance is replaced.
+  user_data_replace_on_change = true
 
-  # Bootstrap: install Python, drop in api/main.py (single source of truth via file()),
-  # install pinned deps, write the same env vars as api/.env, and run uvicorn under systemd.
   user_data = <<-EOF
     #!/bin/bash
     set -euxo pipefail
@@ -88,13 +56,20 @@ resource "aws_instance" "api_server" {
     ${file("${path.module}/../api/requirements.txt")}
     REQ
 
-    pip3 install -r /opt/api/requirements.txt
+    # A venv keeps the uvicorn path deterministic instead of depending on
+    # where a root-level `pip3 install` happens to drop console scripts.
+    python3 -m venv /opt/api/venv
+    /opt/api/venv/bin/pip install --upgrade pip
+    /opt/api/venv/bin/pip install -r /opt/api/requirements.txt
 
     # Same configuration contract as api/main.py's load_dotenv(), sourced from Terraform.
     cat > /opt/api/.env <<'ENV'
     AWS_REGION=${var.aws_region}
     DYNAMODB_TABLE_NAME=${aws_dynamodb_table.biopod_telemetry_db.name}
     ENV
+
+    chown -R ec2-user:ec2-user /opt/api
+    chmod 600 /opt/api/.env
 
     cat > /etc/systemd/system/biopod-api.service <<'UNIT'
     [Unit]
@@ -103,9 +78,10 @@ resource "aws_instance" "api_server" {
     Wants=network-online.target
 
     [Service]
+    User=ec2-user
+    Group=ec2-user
     WorkingDirectory=/opt/api
-    # TODO_CONFIGURE: --port must match the security group ingress port above (uvicorn default is 8000)
-    ExecStart=/usr/local/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+    ExecStart=/opt/api/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
     Restart=always
 
     [Install]
@@ -115,4 +91,8 @@ resource "aws_instance" "api_server" {
     systemctl daemon-reload
     systemctl enable --now biopod-api.service
   EOF
+
+  tags = {
+    Name = "biopod-api-server"
+  }
 }
