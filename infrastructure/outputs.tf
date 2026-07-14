@@ -12,3 +12,8 @@ output "api_datasource_url" {
   description = "Base URL to configure as the Grafana JSON/Infinity datasource."
   value       = "http://${aws_instance.api_server.private_ip}:8000"
 }
+
+output "grafana_server_public_ip" {
+  description = "Browser here: http://<this>:3000"
+  value       = aws_instance.grafana_server.public_ip
+}

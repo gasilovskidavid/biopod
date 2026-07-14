@@ -27,3 +27,34 @@ resource "aws_security_group" "grafana_server" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_instance" "grafana_server" {
+  ami           = data.aws_ami.al2023_arm64.id
+  instance_type = "t4g.micro"
+
+  key_name               = aws_key_pair.admin.key_name
+  vpc_security_group_ids = [aws_security_group.grafana_server.id]
+  subnet_id              = data.aws_subnets.default.ids[0]
+
+  user_data_replace_on_change = true
+
+  user_data = <<-EOF
+    #!/bin/bash
+    set -euxo pipefail
+
+    dnf install -y https://dl.grafana.com/oss/release/grafana-11.6.0-1.aarch64.rpm
+
+    systemctl enable --now grafana-server
+
+    grafana-cli plugins install yesoreyeram-infinity-datasource
+
+    chown -R grafana:grafana /var/lib/grafana/plugins
+    chmod -R 755 /var/lib/grafana/plugins
+
+    systemctl restart grafana-server
+  EOF
+
+  tags = {
+    Name = "biopod-grafana-server"
+  }
+}
