@@ -23,3 +23,8 @@ data "aws_ami" "al2023_arm64" {
     values = ["al2023-ami-2023*"]
   }
 }
+
+resource "aws_key_pair" "admin" {
+  key_name   = "biopod-admin-key"
+  public_key = var.ssh_public_key
+}
