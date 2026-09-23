@@ -25,8 +25,39 @@ jobs:
       - name: Ruff lint
         run: ruff check .
 
-      - name: Ruff format check 
+      - name: Ruff format check
         run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    env:
+      AWS_ACCESS_KEY_ID: testing
+      AWS_SECRET_ACCESS_KEY: testing
+      AWS_SESSION_TOKEN: testing
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -r api/requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          set +e
+          pytest --no-header -q
+          code=$?
+          if [ "$code" -eq 5 ]; then
+            echo "No tests collected yet — suite lands separately."
+            exit 0
+          fi
+          exit "$code"
 
   terraform:
       runs-on: ubuntu-latest
