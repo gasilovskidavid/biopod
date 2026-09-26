@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime, timezone
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -20,16 +21,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Items are small (2 strings + 5 floats, ~150-250 bytes each), so 10k items is a
-# bounded payload that covers realistic query windows while protecting against an
-# unbounded/mistaken time range driving many DynamoDB pages into one huge response.
 MAX_ITEMS = 10_000
 
-# DynamoDB error codes indicating transient capacity/throttling on AWS's side
-# (client should back off and retry) map to 503. Everything else, including
-# ValidationException/ResourceNotFoundException (almost always a bug in this
-# code's query construction, not bad caller input) and any unlisted code,
-# maps to 500.
 DYNAMODB_ERROR_STATUS: dict[str, int] = {
     "ProvisionedThroughputExceededException": 503,
     "ThrottlingException": 503,
@@ -39,11 +32,26 @@ DYNAMODB_ERROR_STATUS: dict[str, int] = {
     "ResourceNotFoundException": 500,
 }
 
-# Heuristic only - DynamoDB gives no retry hint, and boto3 has already spent
-# ~5 legacy-mode attempts' worth of backoff before this exception surfaces.
-# 2s is short enough not to stall interactive callers, long enough to clear
-# brief throttling bursts; tune from observed CloudWatch throttling patterns.
 DYNAMODB_RETRY_AFTER_SECONDS = "2"
+
+DYNAMODB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+def parse_iso8601(field_name: str, value: str) -> str:
+    try:
+        dt = datetime.fromisoformat(value)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Invalid {field_name!r}: {value!r} is not a valid ISO-8601 datetime."
+            ),
+        ) from e
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.strftime(DYNAMODB_TIMESTAMP_FORMAT)
 
 
 class Reading(BaseModel):
@@ -115,6 +123,11 @@ def fetch_all_readings(pod_query_key) -> tuple[list[dict], bool]:
 def query_readings(
     pod_id: str, start_time: str | None = None, end_time: str | None = None
 ) -> ReadingsResponse:
+    if start_time is not None:
+        start_time = parse_iso8601("start_time", start_time)
+    if end_time is not None:
+        end_time = parse_iso8601("end_time", end_time)
+
     pod_query_key = Key("pod_id").eq(pod_id)
     if start_time and end_time:
         pod_query_key &= Key("timestamp").between(start_time, end_time)
