@@ -36,6 +36,7 @@ DYNAMODB_RETRY_AFTER_SECONDS = "2"
 
 DYNAMODB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
+
 def parse_iso8601(field_name: str, value: str) -> str:
     try:
         dt = datetime.fromisoformat(value)
