@@ -7,7 +7,7 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from models import ReadingsResponse
 
 load_dotenv()
 
@@ -53,22 +53,6 @@ def parse_iso8601(field_name: str, value: str) -> str:
     else:
         dt = dt.astimezone(timezone.utc)
     return dt.strftime(DYNAMODB_TIMESTAMP_FORMAT)
-
-
-class Reading(BaseModel):
-    pod_id: str
-    timestamp: str
-    co2_ppm: float
-    temperature_c: float
-    rh_pct: float
-    water_ph: float
-    light_ppfd: float
-
-
-class ReadingsResponse(BaseModel):
-    items: list[Reading]
-    count: int
-    truncated: bool
 
 
 def fetch_all_readings(pod_query_key) -> tuple[list[dict], bool]:
@@ -120,10 +104,10 @@ def fetch_all_readings(pod_query_key) -> tuple[list[dict], bool]:
             return items, False
 
 
-@app.get("/readings")
+@app.get("/readings", response_model=ReadingsResponse)
 def query_readings(
     pod_id: str, start_time: str | None = None, end_time: str | None = None
-) -> ReadingsResponse:
+):
     if start_time is not None:
         start_time = parse_iso8601("start_time", start_time)
     if end_time is not None:
@@ -143,8 +127,8 @@ def query_readings(
             status_code=404,
             detail=f"No readings found for pod {pod_id} for selected timerange",
         )
-    return ReadingsResponse(
-        items=[Reading(**item) for item in readings],
-        count=len(readings),
-        truncated=truncated,
-    )
+    return {
+        "items": readings,
+        "count": len(readings),
+        "truncated": truncated,
+    }
