@@ -42,7 +42,7 @@ resource "aws_instance" "grafana_server" {
     #!/bin/bash
     set -euxo pipefail
 
-    dnf install -y https://dl.grafana.com/oss/release/grafana-11.6.0-1.aarch64.rpm
+    dnf install -y https://dl.grafana.com/oss/release/grafana-13.2.3-1.aarch64.rpm
 
     systemctl enable --now grafana-server
 
