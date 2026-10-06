@@ -60,7 +60,10 @@ def fetch_all_readings(pod_query_key) -> tuple[list[dict], bool]:
     exclusive_start_key = None
 
     while True:
-        query_kwargs = {"KeyConditionExpression": pod_query_key}
+        query_kwargs = {
+            "KeyConditionExpression": pod_query_key,
+            "ScanIndexForward": False,
+        }
         if exclusive_start_key:
             query_kwargs["ExclusiveStartKey"] = exclusive_start_key
 
@@ -97,11 +100,11 @@ def fetch_all_readings(pod_query_key) -> tuple[list[dict], bool]:
         items.extend(response.get("Items", []))
 
         if len(items) >= MAX_ITEMS:
-            return items[:MAX_ITEMS], True
+            return items[MAX_ITEMS - 1 :: -1], True
 
         exclusive_start_key = response.get("LastEvaluatedKey")
         if not exclusive_start_key:
-            return items, False
+            return items[::-1], False
 
 
 @app.get("/readings", response_model=ReadingsResponse)
